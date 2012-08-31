@@ -326,6 +326,7 @@ protected:
   bool CheckDelayedChannelEntry(void);
 
   bool OpenInputStream();
+  bool OpenExternalAudioInputStreams();
   bool OpenDemuxStream();
   void OpenDefaultStreams(bool reset = true);
 
@@ -374,6 +375,7 @@ protected:
   CDVDDemux* m_pSubtitleDemuxer;
 
   CStdString m_lastSub;
+  std::vector<CDVDInputStream*> m_extInputStreams;
 
   struct SDVDInfo
   {
