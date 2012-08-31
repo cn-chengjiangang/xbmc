@@ -50,6 +50,7 @@
 #include "DllSwScale.h"
 #include "filesystem/File.h"
 #include "TextureCache.h"
+#include "Util.h"
 
 
 bool CDVDFileInfo::GetFileDuration(const CStdString &path, int& duration)
@@ -137,7 +138,7 @@ bool CDVDFileInfo::ExtractThumb(const CStdString &strPath, CTextureDetails &deta
   }
 
   if (pStreamDetails)
-    DemuxerToStreamDetails(pInputStream, pDemuxer, *pStreamDetails, strPath);
+    DemuxerToStreamDetails(pInputStream, pDemuxer, *pStreamDetails, false, strPath);
 
   CDemuxStream* pStream = NULL;
   int nVideoStream = -1;
@@ -316,7 +317,7 @@ bool CDVDFileInfo::GetFileStreamDetails(CFileItem *pItem)
   CDVDDemux *pDemuxer = CDVDFactoryDemuxer::CreateDemuxer(pInputStream);
   if (pDemuxer)
   {
-    bool retVal = DemuxerToStreamDetails(pInputStream, pDemuxer, pItem->GetVideoInfoTag()->m_streamDetails, strFileNameAndPath);
+    bool retVal = DemuxerToStreamDetails(pInputStream, pDemuxer, pItem->GetVideoInfoTag()->m_streamDetails, true, strFileNameAndPath);
     delete pDemuxer;
     delete pInputStream;
     return retVal;
@@ -328,8 +329,40 @@ bool CDVDFileInfo::GetFileStreamDetails(CFileItem *pItem)
   }
 }
 
+bool CDVDFileInfo::DemuxerToStreamDetails(CDVDInputStream *pInputStream, CDVDDemux *pDemux, std::vector<CDVDDemux*> m_extDemuxer, CStreamDetails &details, const CStdString &path)
+{
+  bool retVal = false;
+  details.Reset();
+  retVal = DemuxerToStreamDetails(pInputStream, pDemux, details, false, path);
+
+  if(! retVal)
+    return false;
+
+  // process external audio streams
+  for (unsigned int i = 0; i < m_extDemuxer.size(); i++)
+  {
+    if (m_extDemuxer[i])
+    {
+      CDemuxStream *stream = m_extDemuxer[i]->GetStream(0);
+
+      if (stream->type == STREAM_AUDIO)
+      {
+        CStreamDetailAudio *p = new CStreamDetailAudio();
+        p->m_iChannels = ((CDemuxStreamAudio *)stream)->iChannels;
+        if (stream->language)
+          p->m_strLanguage = stream->language;
+        pDemux->GetStreamCodecName(0, p->m_strCodec);
+        details.AddStream(p);
+        retVal = true;
+      }
+    }
+  }
+
+  details.DetermineBestStreams();
+  return retVal;
+}
 /* returns true if details have been added */
-bool CDVDFileInfo::DemuxerToStreamDetails(CDVDInputStream *pInputStream, CDVDDemux *pDemux, CStreamDetails &details, const CStdString &path)
+bool CDVDFileInfo::DemuxerToStreamDetails(CDVDInputStream *pInputStream, CDVDDemux *pDemux, CStreamDetails &details, bool handleExternalAudio, const CStdString &path)
 {
   bool retVal = false;
   details.Reset();
@@ -393,6 +426,79 @@ bool CDVDFileInfo::DemuxerToStreamDetails(CDVDInputStream *pInputStream, CDVDDem
       }
     }
   }  /* for iStream */
+
+  // include external audio tracks
+  if (handleExternalAudio)
+  {
+    // find any available external audio track
+    std::vector<CStdString> filenames;
+    CUtil::ScanForExternalAudio( path, filenames );
+    for(unsigned int i=0;i<filenames.size();i++)
+    {
+      CDVDInputStream* ext_pInputStream;
+      CFileItem ext_item = CFileItem(filenames[i]);
+      CStdString ext_mimeType = ext_item.GetMimeType();
+      ext_pInputStream = CDVDFactoryInputStream::CreateInputStream(NULL, filenames[i], ext_mimeType);
+      if(ext_pInputStream == NULL)
+      {
+        CLog::Log(LOGERROR, "CDVDPlayer::OpenInputStream - unable to create input stream for external audio file [%s]", filenames[i].c_str());
+        continue;
+      }
+      else
+        ext_pInputStream->SetFileItem(ext_item);
+
+      if (!ext_pInputStream->Open(filenames[i].c_str(), ext_mimeType))
+      {
+        CLog::Log(LOGERROR, "CDVDPlayer::OpenInputStream - error opening  external audio file [%s]", filenames[i].c_str());
+        continue;
+      }
+      CDVDDemux* extDemuxer = NULL;
+      try
+      {
+        int attempts = 10;
+        while(attempts-- > 0)
+        {
+          extDemuxer = CDVDFactoryDemuxer::CreateDemuxer(ext_pInputStream);
+          if(!extDemuxer && ext_pInputStream->NextStream() != CDVDInputStream::NEXTSTREAM_NONE)
+          {
+            CLog::Log(LOGDEBUG, "%s - New stream available from input, retry open", __FUNCTION__);
+            continue;
+          }
+          break;
+        }
+
+        if(!extDemuxer)
+        {
+          CLog::Log(LOGERROR, "%s - Error creating external audio demuxer for file %s", __FUNCTION__, ext_pInputStream->GetFileName());
+          continue;
+        }
+
+      }
+      catch(...)
+      {
+        CLog::Log(LOGERROR, "%s - Exception thrown when opening external audio demuxer for file %s", __FUNCTION__, ext_pInputStream->GetFileName());
+        continue;
+      }
+      if(extDemuxer)
+      {
+        //filter strange external audio files
+        if(extDemuxer->GetNrOfStreams() > 1)
+          continue;
+
+        CDemuxStream *stream = extDemuxer->GetStream(0);
+        if (stream->type == STREAM_AUDIO)
+        {
+          CStreamDetailAudio *p = new CStreamDetailAudio();
+          p->m_iChannels = ((CDemuxStreamAudio *)stream)->iChannels;
+          if (stream->language)
+            p->m_strLanguage = stream->language;
+          extDemuxer->GetStreamCodecName(0, p->m_strCodec);
+          details.AddStream(p);
+          retVal = true;
+        }
+      }
+    }
+  }
 
   details.DetermineBestStreams();
 #ifdef HAVE_LIBBLURAY
