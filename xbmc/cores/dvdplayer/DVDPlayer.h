@@ -319,6 +319,7 @@ protected:
   bool IsBetterStream(CCurrentStream& current, CDemuxStream* stream);
 
   bool OpenInputStream();
+  bool OpenExternalAudioInputStreams();
   bool OpenDemuxStream();
   void OpenDefaultStreams();
 
@@ -366,6 +367,7 @@ protected:
   CDVDDemux* m_pSubtitleDemuxer;
 
   CStdString m_lastSub;
+  std::vector<CDVDInputStream*> m_extInputStreams;
 
   struct SDVDInfo
   {
