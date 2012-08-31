@@ -149,6 +149,7 @@ public:
 
   void             Update  (SelectionStream& s);
   void             Update  (CDVDInputStream* input, CDVDDemux* demuxer);
+  void             UpdateExtAudio  (CDVDInputStream* input, CDVDDemux* ext_demuxer);
 };
 
 
@@ -321,6 +322,7 @@ protected:
   bool OpenInputStream();
   bool OpenExternalAudioInputStreams();
   bool OpenDemuxStream();
+  bool OpenExternalAudioDemuxStreams();
   void OpenDefaultStreams();
 
   void UpdateApplication(double timeout);
@@ -368,6 +370,9 @@ protected:
 
   CStdString m_lastSub;
   std::vector<CDVDInputStream*> m_extInputStreams;
+  std::vector<CDVDDemux*> m_extDemuxer;
+  bool m_extAudio;
+  int m_extAudioOffset;
 
   struct SDVDInfo
   {
