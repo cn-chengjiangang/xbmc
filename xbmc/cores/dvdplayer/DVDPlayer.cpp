@@ -2667,6 +2667,7 @@ void CDVDPlayer::GetSubtitleLanguage(int iStream, CStdString &strStreamLang)
 
 void CDVDPlayer::SetSubtitle(int iStream)
 {
+  g_settings.m_currentVideoSettings.m_SubtitleStream = iStream;
   m_messenger.Put(new CDVDMsgPlayerSetSubtitleStream(iStream));
 }
 
