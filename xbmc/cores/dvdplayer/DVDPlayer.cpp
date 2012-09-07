@@ -1251,17 +1251,14 @@ void CDVDPlayer::Process()
         CLog::Log(LOGDEBUG, "%s - failed to start subtitle demuxing from: %d", __FUNCTION__, starttime);
     }
 
-    for (unsigned int i = 0; i < m_extDemuxer.size(); i++)
-    {
-      if(m_extDemuxer[i])
+    if (m_extAudio && m_extDemuxer[m_extAudioId])
       {
-        if(m_extDemuxer[i]->SeekTime(starttime, false, &startpts))
+        if(m_extDemuxer[m_extAudioId]->SeekTime(starttime, false, &startpts))
           CLog::Log(LOGDEBUG, "%s - starting external audio file demuxer from: %d", __FUNCTION__, starttime);
         else
           CLog::Log(LOGDEBUG, "%s - failed to start external audio file demuxing from: %d", __FUNCTION__, starttime);
       }
     }
-  }
 
   // make sure all selected stream have data on startup
   if (CachePVRStream())
@@ -2337,16 +2334,14 @@ void CDVDPlayer::HandleMessages()
             if(!m_pSubtitleDemuxer->SeekTime(time, msg.GetBackward()))
               CLog::Log(LOGDEBUG, "failed to seek subtitle demuxer: %d, success", time);
           }
-          for(unsigned int i = 0; i < m_extDemuxer.size(); i++)
-          {
-            if(m_extDemuxer[i])
+
+          if (m_extAudio && m_extDemuxer[m_extAudioId])
             {
-              if(!m_extDemuxer[i]->SeekTime(time, msg.GetBackward(), &start))
+              if(!m_extDemuxer[m_extAudioId]->SeekTime(time, msg.GetBackward(), &start))
                 CLog::Log(LOGDEBUG, "failed to seek external audio demuxer: %d, success", time);
               else
                 CLog::Log(LOGDEBUG, "external audio demuxer seek to: %d, success", time);
             }
-          }
 
           // dts after successful seek
           if (m_StateInput.time_src  == ETIMESOURCE_CLOCK && start == DVD_NOPTS_VALUE)
@@ -2379,10 +2374,10 @@ void CDVDPlayer::HandleMessages()
         // This should always be the case.
         if(m_pDemuxer && m_pDemuxer->SeekChapter(msg.GetChapter(), &start))
         {
-          for(unsigned int i = 0; i < m_extDemuxer.size(); i++)
+          if (m_extAudio && m_extDemuxer[m_extAudioId])
           {
-            if(m_extDemuxer[i])
-              m_extDemuxer[i]->SeekChapter(msg.GetChapter(), &start);
+            if(!m_extDemuxer[m_extAudioId]->SeekChapter(msg.GetChapter(), &start))
+              CLog::Log(LOGDEBUG, "failed to seek chpters on external audio demuxer: %d, success", time);
           }
 
           FlushBuffers(false, start, true);
@@ -2536,12 +2531,8 @@ void CDVDPlayer::HandleMessages()
         if(m_pDemuxer)
           m_pDemuxer->SetSpeed(speed);
 
-        for(unsigned int i = 0; i < m_extDemuxer.size(); i++)
-        {
-          if(m_extDemuxer[i])
-            m_extDemuxer[i]->SetSpeed(speed);
-        }
-
+        if (m_extAudio && m_extDemuxer[m_extAudioId])
+            m_extDemuxer[m_extAudioId]->SetSpeed(speed);
       }
       else if (pMsg->IsType(CDVDMsg::PLAYER_CHANNEL_SELECT_NUMBER) && m_messenger.GetPacketCount(CDVDMsg::PLAYER_CHANNEL_SELECT_NUMBER) == 0)
       {
