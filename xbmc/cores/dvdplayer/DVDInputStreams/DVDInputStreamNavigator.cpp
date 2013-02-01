@@ -958,6 +958,64 @@ std::string CDVDInputStreamNavigator::GetAudioStreamLanguage(int iId)
   return strLanguage;
 }
 
+std::string CDVDInputStreamNavigator::GetAudioStreamName(int iId)
+{
+
+  if (!m_dvdnav) return NULL;
+
+  CStdString strName;
+
+  int streamId = ConvertAudioStreamId_XBMCToExternal(iId);
+  int channels = m_dll.dvdnav_audio_stream_channels(m_dvdnav, streamId);
+  int format = m_dll.dvdnav_audio_stream_format(m_dvdnav, streamId);
+
+  switch(channels)
+  {
+  case 1:
+    strName+= "Mono";
+    break;
+  case 2: 
+    strName+= "Stereo";
+    break;
+  case 6: 
+    strName+= "5.1";
+    break;
+  case 7:
+    strName+= "6.1";
+    break;
+  default:
+    char temp[32];
+    sprintf(temp, " %d", channels);
+    strName+= temp;
+  }
+
+  switch(format)
+  {
+    //cf. dvdnav.h and dvdnav.c 
+  case DVD_AUDIO_FORMAT_AC3:
+    strName+= " AC3";
+    break;
+  case DVD_AUDIO_FORMAT_MPEG1_DRC:
+  case DVD_AUDIO_FORMAT_MPEG2:
+    strName+= " MPEGAUDIO";
+    break;
+  case 4:
+    strName+= " LPCM";
+    break;
+  case 5:
+    strName+= " DTS";
+    break;
+  case 6:
+    strName+= " SDDS";
+    break;
+  default:
+    strName+= " Other";
+    break;
+  }
+
+  return strName;
+}
+
 int CDVDInputStreamNavigator::GetAudioStreamCount()
 {
   if (!m_dvdnav) return 0;

@@ -329,7 +329,8 @@ void CSelectionStreams::Update(CDVDInputStream* input, CDVDDemux* demuxer)
       s.source   = source;
       s.type     = STREAM_AUDIO;
       s.id       = i;
-      s.name     = nav->GetAudioStreamLanguage(i);
+      s.name     = nav->GetAudioStreamName(i);
+      s.language = nav->GetAudioStreamLanguage(i);
       s.flags    = CDemuxStream::FLAG_NONE;
       s.filename = filename;
       s.channels = 0;
