@@ -37,6 +37,7 @@
 #include "guilib/LocalizeStrings.h"
 #include "pvr/PVRManager.h"
 #include "cores/AudioEngine/Utils/AEUtil.h"
+#include "utils/LangCodeExpander.h"
 
 using namespace std;
 using namespace XFILE;
@@ -162,9 +163,18 @@ void CGUIDialogAudioSubtitleSettings::AddAudioStreams(unsigned int id)
   {
     CStdString strItem;
     CStdString strName;
+    CStdString strLanguage;
+
     g_application.m_pPlayer->GetAudioStreamName(i, strName);
+    g_application.m_pPlayer->GetAudioStreamLanguage(i, strLanguage);
+
     if (strName.length() == 0)
       strName = "Unnamed";
+
+    if (!g_LangCodeExpander.Lookup(strLanguage, strLanguage))
+      strLanguage = g_localizeStrings.Get(13205); // Unknown
+
+    strName.Format("%s - %s", strLanguage.c_str(), strName.c_str());
 
     strItem.Format("%s (%i/%i)", strName.c_str(), i + 1, (int)setting.max + 1);
     setting.entry.push_back(make_pair(setting.entry.size(), strItem));
