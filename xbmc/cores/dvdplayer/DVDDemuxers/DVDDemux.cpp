@@ -168,14 +168,7 @@ CDemuxStreamTeletext* CDVDDemux::GetStreamFromTeletextId(int iTeletextIndex)
 
 void CDemuxStream::GetStreamName( std::string& strInfo )
 {
-  if( language[0] == 0 )
-    strInfo = "";
-  else
-  {
-    CStdString name;
-    g_LangCodeExpander.Lookup( name, language );
-    strInfo = name;
-  }
+  strInfo = "";
 }
 
 AVDiscard CDemuxStream::GetDiscard()
