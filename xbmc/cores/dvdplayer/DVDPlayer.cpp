@@ -2955,8 +2955,6 @@ void CDVDPlayer::GetSubtitleName(int iStream, CStdString &strStreamName)
   SelectionStream& s = m_SelectionStreams.Get(STREAM_SUBTITLE, iStream);
   if(s.name.length() > 0)
     strStreamName = s.name;
-  else
-    strStreamName = g_localizeStrings.Get(13205); // Unknown
 
   if(s.type == STREAM_NONE)
     strStreamName += "(Invalid)";
@@ -3013,8 +3011,6 @@ void CDVDPlayer::GetAudioStreamName(int iStream, CStdString& strStreamName)
   SelectionStream& s = m_SelectionStreams.Get(STREAM_AUDIO, iStream);
   if(s.name.length() > 0)
     strStreamName += s.name;
-  else
-    strStreamName += "Unknown";
 
   if(s.type == STREAM_NONE)
     strStreamName += " (Invalid)";
