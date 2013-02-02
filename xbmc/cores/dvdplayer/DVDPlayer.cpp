@@ -2962,9 +2962,10 @@ void CDVDPlayer::GetSubtitleName(int iStream, CStdString &strStreamName)
 
 void CDVDPlayer::GetSubtitleLanguage(int iStream, CStdString &strStreamLang)
 {
+  strStreamLang = "";
   SelectionStream& s = m_SelectionStreams.Get(STREAM_SUBTITLE, iStream);
-  if (!g_LangCodeExpander.Lookup(strStreamLang, s.language))
-    strStreamLang = g_localizeStrings.Get(13205); // Unknown
+  if (s.language.length() > 0)
+    strStreamLang = s.language;
 }
 
 void CDVDPlayer::SetSubtitle(int iStream)
