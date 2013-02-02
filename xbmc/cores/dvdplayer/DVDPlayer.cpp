@@ -345,6 +345,7 @@ void CSelectionStreams::Update(CDVDInputStream* input, CDVDDemux* demuxer)
       s.type     = STREAM_SUBTITLE;
       s.id       = i;
       s.name     = nav->GetSubtitleStreamName(i);
+      s.language = nav->GetSubtitleStreamLanguage(i);
       s.flags    = CDemuxStream::FLAG_NONE;
       s.filename = filename;
       s.channels = 0;

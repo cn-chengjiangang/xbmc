@@ -822,6 +822,27 @@ int CDVDInputStreamNavigator::GetActiveSubtitleStream()
   return activeStream;
 }
 
+std::string CDVDInputStreamNavigator::GetSubtitleStreamLanguage(int iId)
+{
+  if (!m_dvdnav) return NULL;
+
+  CStdString strLanguage;
+
+  int streamId = ConvertSubtitleStreamId_XBMCToExternal(iId);
+
+  int langcode = m_dll.dvdnav_spu_stream_to_lang(m_dvdnav, streamId);
+
+  char lang[3];
+  lang[2] = 0;
+  lang[1] = (langcode & 255);
+  lang[0] = (langcode >> 8) & 255;
+
+  g_LangCodeExpander.ConvertToThreeCharCode(strLanguage, lang);
+
+  return strLanguage;
+
+}
+
 std::string CDVDInputStreamNavigator::GetSubtitleStreamName(int iId)
 {
   if (!m_dvdnav) return NULL;
