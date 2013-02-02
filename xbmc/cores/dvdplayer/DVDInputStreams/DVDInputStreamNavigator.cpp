@@ -925,6 +925,16 @@ int CDVDInputStreamNavigator::GetActiveAudioStream()
   return activeStream;
 }
 
+int CDVDInputStreamNavigator::GetAudioStreamChannels(int iId)
+{
+  if (!m_dvdnav) return NULL;
+
+  int streamId = ConvertAudioStreamId_XBMCToExternal(iId);
+  int channels = m_dll.dvdnav_audio_stream_channels(m_dvdnav, streamId);
+
+  return channels;
+}
+
 std::string CDVDInputStreamNavigator::GetAudioStreamLanguage(int iId)
 {
   if (!m_dvdnav) return NULL;

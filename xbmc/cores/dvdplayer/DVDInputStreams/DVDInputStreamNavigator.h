@@ -108,6 +108,7 @@ public:
   int GetAudioStreamCount();
   bool SetActiveAudioStream(int iId);
   std::string GetAudioStreamName(int iId);
+  int GetAudioStreamChannels(int iId);
 
   bool GetNavigatorState(std::string &xmlstate);
   bool SetNavigatorState(std::string &xmlstate);
