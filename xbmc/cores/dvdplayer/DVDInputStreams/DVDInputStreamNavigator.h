@@ -98,6 +98,7 @@ public:
   int GetActiveSubtitleStream();
   std::string GetSubtitleStreamLanguage(int iId);
   int GetSubTitleStreamCount();
+  std::string GetSubtitleStreamName(int iId);
 
   bool SetActiveSubtitleStream(int iId);
   void EnableSubtitleStream(bool bEnable);
