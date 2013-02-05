@@ -40,4 +40,5 @@ public:
   static bool DemuxerToStreamDetails(CDVDInputStream* pInputStream, CDVDDemux *pDemux, CStreamDetails &details, bool handleExternalAudio, const CStdString &path = "");
   static bool GetFileDuration(const CStdString &path, int &duration);
   static bool AddExternalAudioToDetails(const CStdString &path, CStreamDetails &details);
+  static bool AddExternalSubtitleToDetails(const CStdString &path, CStreamDetails &details, const std::string& filename, const std::string& subfilename = "");
 };

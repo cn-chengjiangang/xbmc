@@ -44,6 +44,7 @@
 #include "DVDCodecs/DVDFactoryCodec.h"
 #include "DVDCodecs/Video/DVDVideoCodec.h"
 #include "DVDCodecs/Video/DVDVideoCodecFFmpeg.h"
+#include "DVDDemuxers/DVDDemuxVobsub.h"
 
 #include "DllAvCodec.h"
 #include "DllSwScale.h"
@@ -427,6 +428,34 @@ bool CDVDFileInfo::DemuxerToStreamDetails(CDVDInputStream *pInputStream, CDVDDem
   if (handleExternalAudio)
     retVal |= AddExternalAudioToDetails(path, details);
 
+  //extern subtitles
+  std::vector<CStdString> filenames;
+  CStdString video_path;
+  if (path.empty())
+    video_path = pInputStream->GetFileName();
+  else
+    video_path = path;
+
+  CUtil::ScanForExternalSubtitles( video_path, filenames );
+
+  for(unsigned int i=0;i<filenames.size();i++)
+  {
+    // if vobsub subtitle:
+    if (URIUtils::GetExtension(filenames[i]) == ".idx")
+    {
+      CStdString strSubFile;
+      if ( CUtil::FindVobSubPair( filenames, filenames[i], strSubFile ) )
+        retVal |= AddExternalSubtitleToDetails(video_path, details, filenames[i], strSubFile);
+    }
+    else
+    {
+      if ( !CUtil::IsVobSub(filenames, filenames[i] ) )
+      {
+        retVal |= AddExternalSubtitleToDetails(video_path, details, filenames[i]);
+      }
+    }
+  }
+
   details.DetermineBestStreams();
 #ifdef HAVE_LIBBLURAY
   // correct bluray runtime. we need the duration from the input stream, not the demuxer.
@@ -439,6 +468,39 @@ bool CDVDFileInfo::DemuxerToStreamDetails(CDVDInputStream *pInputStream, CDVDDem
   }
 #endif
   return retVal;
+}
+
+bool CDVDFileInfo::AddExternalSubtitleToDetails(const CStdString &path, CStreamDetails &details, const std::string& filename, const std::string& subfilename)
+{
+  std::string ext = URIUtils::GetExtension(filename);
+  std::string vobsubfile = subfilename;
+  if(ext == ".idx")
+  {
+    if (vobsubfile.empty())
+      vobsubfile = URIUtils::ReplaceExtension(filename, ".sub");
+
+    CDVDDemuxVobsub v;
+    if(!v.Open(filename, vobsubfile))
+      return false;
+  }
+  if(ext == ".sub")
+  {
+    CStdString strReplace(URIUtils::ReplaceExtension(filename,".idx"));
+    if (XFILE::CFile::Exists(strReplace))
+      return false;
+  }
+
+  CStreamDetailSubtitle *dsub = new CStreamDetailSubtitle();
+  std::string temp;
+  CUtil::GetExternalStreamNameAndLangFromFilename(path, filename, temp, dsub->m_strLanguage);
+
+  if(!dsub->m_strLanguage.empty())
+  {
+    details.AddStream(dsub);
+    return true;
+  }
+  else
+    return false;
 }
 
 bool CDVDFileInfo::AddExternalAudioToDetails(const CStdString &path, CStreamDetails &details)
