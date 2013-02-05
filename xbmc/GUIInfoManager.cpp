@@ -395,6 +395,7 @@ const infomap videoplayer[] =    {{ "title",            VIDEOPLAYER_TITLE },
                                   { "videoaspect",      VIDEOPLAYER_VIDEO_ASPECT },
                                   { "audiocodec",       VIDEOPLAYER_AUDIO_CODEC },
                                   { "audiochannels",    VIDEOPLAYER_AUDIO_CHANNELS },
+                                  { "audiochannels",    VIDEOPLAYER_AUDIO_LANG },
                                   { "hasteletext",      VIDEOPLAYER_HASTELETEXT },
                                   { "lastplayed",       VIDEOPLAYER_LASTPLAYED },
                                   { "playcount",        VIDEOPLAYER_PLAYCOUNT },
@@ -1489,6 +1490,10 @@ CStdString CGUIInfoManager::GetLabel(int info, int contextWindow, CStdString *fa
     //  - when we toggle disable/enable subs there will be few frames before message will be handled
     if(g_application.IsPlaying() && g_application.m_pPlayer && g_settings.m_currentVideoSettings.m_SubtitleOn)
        g_application.m_pPlayer->GetSubtitleLanguage(g_settings.m_currentVideoSettings.m_SubtitleStream, strLabel);
+    break;
+  case VIDEOPLAYER_AUDIO_LANG:
+    if(g_application.IsPlaying() && g_application.m_pPlayer)
+      g_application.m_pPlayer->GetAudioStreamLanguage(g_settings.m_currentVideoSettings.m_AudioStream, strLabel);
     break;
   case PLAYLIST_LENGTH:
   case PLAYLIST_POSITION:
