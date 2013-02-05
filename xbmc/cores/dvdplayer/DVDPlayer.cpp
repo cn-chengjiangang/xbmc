@@ -772,6 +772,11 @@ bool CDVDPlayer::OpenExternalAudioDemuxStreams()
           delete extDemuxer;
           continue;
         }
+        std::string name, lang;
+        CUtil::GetExternalStreamNameAndLangFromFilename(m_pDemuxer->GetFileName(), extDemuxer->GetFileName(), name, lang);
+
+        if (strlen(extDemuxer->GetStream(0)->language) == 0)
+          strncpy(extDemuxer->GetStream(0)->language, lang.c_str(), 3);
 
         m_SelectionStreams.UpdateExtAudio(extInput,extDemuxer);
 
