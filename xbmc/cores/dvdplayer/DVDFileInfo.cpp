@@ -347,10 +347,14 @@ bool CDVDFileInfo::DemuxerToStreamDetails(CDVDInputStream *pInputStream, CDVDDem
 
       if (stream->type == STREAM_AUDIO)
       {
+        std::string name, lang;
+        CUtil::GetExternalStreamNameAndLangFromFilename(pDemux->GetFileName(), m_extDemuxer[i]->GetFileName(), name, lang);
         CStreamDetailAudio *p = new CStreamDetailAudio();
         p->m_iChannels = ((CDemuxStreamAudio *)stream)->iChannels;
-        if (stream->language)
+        if (strlen(stream->language) > 0)
           p->m_strLanguage = stream->language;
+        else
+          p->m_strLanguage = lang;
         pDemux->GetStreamCodecName(0, p->m_strCodec);
         details.AddStream(p);
         retVal = true;
@@ -424,17 +428,18 @@ bool CDVDFileInfo::DemuxerToStreamDetails(CDVDInputStream *pInputStream, CDVDDem
     }
   }  /* for iStream */
 
-  // include external audio tracks
-  if (handleExternalAudio)
-    retVal |= AddExternalAudioToDetails(path, details);
-
-  //extern subtitles
-  std::vector<CStdString> filenames;
   CStdString video_path;
   if (path.empty())
     video_path = pInputStream->GetFileName();
   else
     video_path = path;
+
+  // include external audio tracks
+  if (handleExternalAudio)
+    retVal |= AddExternalAudioToDetails(video_path, details);
+
+  //extern subtitles
+  std::vector<CStdString> filenames;
 
   CUtil::ScanForExternalSubtitles( video_path, filenames );
 
@@ -564,10 +569,15 @@ bool CDVDFileInfo::AddExternalAudioToDetails(const CStdString &path, CStreamDeta
       CDemuxStream *stream = extDemuxer->GetStream(0);
       if (stream->type == STREAM_AUDIO)
       {
+        std::string name, lang;
+        CUtil::GetExternalStreamNameAndLangFromFilename(path, filenames[i], name, lang);
         CStreamDetailAudio *p = new CStreamDetailAudio();
         p->m_iChannels = ((CDemuxStreamAudio *)stream)->iChannels;
-        if (stream->language)
+        if (strlen(stream->language) > 0)
           p->m_strLanguage = stream->language;
+        else
+          p->m_strLanguage = lang;
+        
         extDemuxer->GetStreamCodecName(0, p->m_strCodec);
         details.AddStream(p);
         retVal = true;
