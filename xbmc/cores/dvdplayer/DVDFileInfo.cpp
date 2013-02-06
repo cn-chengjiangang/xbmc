@@ -428,39 +428,41 @@ bool CDVDFileInfo::DemuxerToStreamDetails(CDVDInputStream *pInputStream, CDVDDem
     }
   }  /* for iStream */
 
-  CStdString video_path;
-  if (path.empty())
-    video_path = pInputStream->GetFileName();
-  else
-    video_path = path;
-
-  // include external audio tracks
+  // include external tracks
   if (handleExternalAudio)
+  {
+    CStdString video_path;
+    if (path.empty())
+      video_path = pInputStream->GetFileName();
+    else
+      video_path = path;
+
+
     retVal |= AddExternalAudioToDetails(video_path, details);
 
-  //extern subtitles
-  std::vector<CStdString> filenames;
+    //extern subtitles
+    std::vector<CStdString> filenames;
 
-  CUtil::ScanForExternalSubtitles( video_path, filenames );
+    CUtil::ScanForExternalSubtitles( video_path, filenames );
 
-  for(unsigned int i=0;i<filenames.size();i++)
-  {
-    // if vobsub subtitle:
-    if (URIUtils::GetExtension(filenames[i]) == ".idx")
+    for(unsigned int i=0;i<filenames.size();i++)
     {
-      CStdString strSubFile;
-      if ( CUtil::FindVobSubPair( filenames, filenames[i], strSubFile ) )
-        retVal |= AddExternalSubtitleToDetails(video_path, details, filenames[i], strSubFile);
-    }
-    else
-    {
-      if ( !CUtil::IsVobSub(filenames, filenames[i] ) )
+      // if vobsub subtitle:
+      if (URIUtils::GetExtension(filenames[i]) == ".idx")
       {
-        retVal |= AddExternalSubtitleToDetails(video_path, details, filenames[i]);
+        CStdString strSubFile;
+        if ( CUtil::FindVobSubPair( filenames, filenames[i], strSubFile ) )
+          retVal |= AddExternalSubtitleToDetails(video_path, details, filenames[i], strSubFile);
+      }
+      else
+      {
+        if ( !CUtil::IsVobSub(filenames, filenames[i] ) )
+        {
+          retVal |= AddExternalSubtitleToDetails(video_path, details, filenames[i]);
+        }
       }
     }
   }
-
   details.DetermineBestStreams();
 #ifdef HAVE_LIBBLURAY
   // correct bluray runtime. we need the duration from the input stream, not the demuxer.
