@@ -780,6 +780,11 @@ bool CDVDPlayer::OpenExternalAudioDemuxStreams()
         if (strlen(extDemuxer->GetStream(0)->language) == 0)
           strncpy(extDemuxer->GetStream(0)->language, lang.c_str(), 3);
 
+        CStdString s_name;
+        extDemuxer->GetStream(0)->GetStreamName(s_name);
+        if (name.length() > 0 && s_name.length() == 0)
+          ((CDemuxStreamAudioFFmpeg *)extDemuxer->GetStream(0))->m_description = name;
+
         m_SelectionStreams.UpdateExtAudio(extInput,extDemuxer);
 
         int64_t len = extInput->GetLength();
