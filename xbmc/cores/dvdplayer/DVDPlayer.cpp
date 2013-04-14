@@ -405,7 +405,7 @@ void CSelectionStreams::Update(CDVDInputStream* input, CDVDDemux* demuxer)
   }
 }
 
-/* Upate the selection streams with data from external audio files*/
+/* Update the selection streams with data from external audio files*/
 void CSelectionStreams::UpdateExtAudio(CDVDInputStream* input, CDVDDemux* ext_demuxer)
 {
   unsigned int last = m_Streams.size();
@@ -730,10 +730,7 @@ bool CDVDPlayer::OpenExternalAudioDemuxStreams()
     return false;
 
   for(unsigned int i = 0; i < m_extDemuxer.size(); i++)
-  {
-    if(m_extDemuxer[i])
       SAFE_DELETE(m_extDemuxer[i]);
-  }
 
   m_extAudio = false;
 
@@ -806,10 +803,7 @@ bool CDVDPlayer::OpenExternalAudioDemuxStreams()
       SAFE_DELETE(extInput);
     }
   }
-  if(m_extDemuxer.size() == 0)
-    return false;
-  else
-    return true;
+  return m_extDemuxer.size() > 0; 
 }
 
 bool CDVDPlayer::OpenDemuxStream()
@@ -1402,10 +1396,7 @@ void CDVDPlayer::Process()
       {
         SAFE_DELETE(m_pDemuxer);
         for(unsigned int i = 0; i < m_extDemuxer.size(); i++)
-        {
-          if(m_extDemuxer[i])
             SAFE_DELETE(m_extDemuxer[i]);
-        }
 
         m_CurrentAudio.stream = NULL;
         m_CurrentVideo.stream = NULL;
