@@ -321,7 +321,7 @@ protected:
   void UpdateTimestamps(CCurrentStream& current, DemuxPacket* pPacket);
   void SendPlayerMessage(CDVDMsg* pMsg, unsigned int target);
 
-  bool ReadPacket(DemuxPacket*& packet, CDemuxStream*& stream, bool onlyVideo);
+  bool ReadPacket(DemuxPacket*& packet, CDemuxStream*& stream);
   bool ReadExternalAudioPacket(DemuxPacket*& packet, CDemuxStream*& stream);
   bool IsValidStream(CCurrentStream& stream);
   bool IsBetterStream(CCurrentStream& current, CDemuxStream* stream);

@@ -89,10 +89,6 @@
 using namespace std;
 using namespace PVR;
 
-// remove
-int rate = 50;
-// remove
-
 void CSelectionStreams::Clear(StreamType type, StreamSource source)
 {
   CSingleLock lock(m_section);
@@ -954,7 +950,7 @@ bool CDVDPlayer::ReadExternalAudioPacket(DemuxPacket*& packet, CDemuxStream*& st
   return false;
 }
 
-bool CDVDPlayer::ReadPacket(DemuxPacket*& packet, CDemuxStream*& stream, bool onlyVideo)
+bool CDVDPlayer::ReadPacket(DemuxPacket*& packet, CDemuxStream*& stream)
 {
 
   // check if we should read from subtitle demuxer
@@ -983,31 +979,17 @@ bool CDVDPlayer::ReadPacket(DemuxPacket*& packet, CDemuxStream*& stream, bool on
     }
   }
 
-  // read a data frame from stream.
-  if(m_pDemuxer)
-    packet = m_pDemuxer->Read();
-
-
-  if(onlyVideo)
+  StreamType st;
+  CDemuxStream* s;
+  do
   {
-    StreamType st;
-    CDemuxStream* s;
-    if (packet)
-    {
-      s = m_pDemuxer->GetStream(packet->iStreamId);
-      st = s->type;
-      while (st == STREAM_AUDIO && m_extAudio && packet)
-      {
-        packet = m_pDemuxer->Read();
-        if (packet)
-        {
-          s = m_pDemuxer->GetStream(packet->iStreamId);
-          st = s->type;
-        }
-        else break;
-      }
-    }
+    // read a data frame from stream.
+    if(m_pDemuxer)
+      packet = m_pDemuxer->Read();
+    s = m_pDemuxer->GetStream(packet->iStreamId);
+    st = s->type;
   }
+  while (st == STREAM_AUDIO  && packet && m_extAudio);
 
   if(packet)
   {
@@ -1348,15 +1330,11 @@ void CDVDPlayer::Process()
     DemuxPacket* pPacket = NULL;
     CDemuxStream *pStream = NULL;
 
-    if (m_CurrentAudio.id != -1 && m_extAudio)
-      {
-        if(m_dvdPlayerAudio.GetLevel() < rate)
-          ReadExternalAudioPacket(pPacket, pStream);
-        else
-          ReadPacket(pPacket, pStream, true);
-    }
+    if(m_extAudio && m_dvdPlayerAudio.GetLevel() < 50)
+      ReadExternalAudioPacket(pPacket, pStream);
     else
-      ReadPacket(pPacket, pStream, false);
+      ReadPacket(pPacket, pStream);
+
     if (pPacket && !pStream)
     {
       /* probably a empty packet, just free it and move on */
