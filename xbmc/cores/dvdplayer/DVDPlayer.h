@@ -156,7 +156,7 @@ public:
   int              Source  (StreamSource source, std::string filename);
 
   void             Update  (SelectionStream& s);
-  void             Update  (CDVDInputStream* input, CDVDDemux* demuxer);
+  void             Update(std::vector<CDVDInputStream*> inputs, std::vector<CDVDDemux*> demuxers);
   void             UpdateExtAudio  (CDVDInputStream* input, CDVDDemux* ext_demuxer);
 };
 
@@ -327,11 +327,9 @@ protected:
   bool IsBetterStream(CCurrentStream& current, CDemuxStream* stream);
   bool CheckDelayedChannelEntry(void);
 
-  bool OpenInputStream();
-  bool OpenExternalAudioInputStreams();
-  bool OpenDemuxStream();
+  bool OpenInputStreams();
+  bool OpenDemuxStreams();
   void OpenDefaultStreams(bool reset = true);
-  bool OpenExternalAudioDemuxStreams();
 
   void UpdateApplication(double timeout);
   void UpdatePlayState(double timeout);
@@ -373,13 +371,12 @@ protected:
   CDVDClock m_clock;                // master clock
   CDVDOverlayContainer m_overlayContainer;
 
-  CDVDInputStream* m_pInputStream;  // input stream for current playing file
-  CDVDDemux* m_pDemuxer;            // demuxer for current playing file
+  std::vector<CDVDInputStream*> m_pInputStreams;  // input streams for current playing file
+  std::vector<CDVDDemux*> m_pDemuxers;            // demuxers for current playing file
   CDVDDemux* m_pSubtitleDemuxer;
 
   CStdString m_lastSub;
-  std::vector<CDVDInputStream*> m_extInputStreams;
-  std::vector<CDVDDemux*> m_extDemuxer;
+
   bool m_extAudio;
   int m_extAudioOffset;
   int m_extAudioId;
