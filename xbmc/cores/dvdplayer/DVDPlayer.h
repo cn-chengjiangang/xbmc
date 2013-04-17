@@ -373,6 +373,7 @@ protected:
 
   std::vector<CDVDInputStream*> m_pInputStreams;  // input streams for current playing file
   std::vector<CDVDDemux*> m_pDemuxers;            // demuxers for current playing file
+  CDVDDemux* m_pDemuxer;
   CDVDDemux* m_pSubtitleDemuxer;
 
   CStdString m_lastSub;
