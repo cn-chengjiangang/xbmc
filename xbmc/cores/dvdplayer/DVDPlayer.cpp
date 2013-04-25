@@ -417,6 +417,7 @@ CDVDPlayer::CDVDPlayer(IPlayerCallback& callback)
 {
   m_pDemuxer = NULL;
   m_pSubtitleDemuxer = NULL;
+  m_pInputStreams.clear();
   m_pInputStream = NULL;
 
   m_dvd.Clear();
@@ -520,8 +521,11 @@ bool CDVDPlayer::CloseFile()
   if(m_pSubtitleDemuxer)
     m_pSubtitleDemuxer->Abort();
 
-  if(m_pInputStream)
-    m_pInputStream->Abort();
+  for(unsigned int i = 0; i < m_pInputStreams.size(); i++)
+  {
+    if(m_pInputStreams[i])
+      m_pInputStreams[i]->Abort();
+  }
 
   CLog::Log(LOGNOTICE, "DVDPlayer: waiting for threads to exit");
 
@@ -561,10 +565,13 @@ void CDVDPlayer::OnStartup()
   CUtil::ClearTempFonts();
 }
 
-bool CDVDPlayer::OpenInputStream()
+bool CDVDPlayer::OpenInputStreams()
 {
-  if(m_pInputStream)
-    SAFE_DELETE(m_pInputStream);
+  for(unsigned int i = 0; i < m_pInputStreams.size(); i++)
+      SAFE_DELETE(m_pInputStreams[i]);
+  
+  m_pInputStreams.clear();
+  m_pInputStream = NULL;
 
   CLog::Log(LOGNOTICE, "Creating InputStream");
 
@@ -589,20 +596,38 @@ bool CDVDPlayer::OpenInputStream()
     // determine the most appropriate stream
     m_filename = PLAYLIST::CPlayListM3U::GetBestBandwidthStream(m_filename, (size_t)maxrate);
   }
-  m_pInputStream = CDVDFactoryInputStream::CreateInputStream(this, m_filename, m_mimetype);
-  if(m_pInputStream == NULL)
+  // find any available external audio tracks
+  std::vector<CStdString> filenames;
+  filenames.push_back(m_filename);
+  CUtil::ScanForExternalAudio( m_filename, filenames );
+  
+  for(unsigned int i = 0; i < filenames.size(); i++)
   {
-    CLog::Log(LOGERROR, "CDVDPlayer::OpenInputStream - unable to create input stream for [%s]", m_filename.c_str());
-    return false;
-  }
-  else
-    m_pInputStream->SetFileItem(m_item);
+    CFileItem fileItem = CFileItem(filenames[i]);
+    CStdString fileMimeType = fileItem.GetMimeType();
+    CDVDInputStream* pInputStream = CDVDFactoryInputStream::CreateInputStream(this, filenames[i], fileMimeType);
+    if(pInputStream == NULL)
+    {
+      CLog::Log(LOGERROR, "CDVDPlayer::OpenInputStream - unable to create input stream for file [%s]", filenames[i].c_str());
+      // if we can't create an input stream for the "master" file return false.
+      if (filenames[i].Equals(m_filename.c_str()))
+        return false;
+      continue;
+    }
+    else
+      pInputStream->SetFileItem(fileItem);
 
-  if (!m_pInputStream->Open(m_filename.c_str(), m_mimetype))
-  {
-    CLog::Log(LOGERROR, "CDVDPlayer::OpenInputStream - error opening [%s]", m_filename.c_str());
-    return false;
+    if (!pInputStream->Open(filenames[i].c_str(), fileMimeType))
+    {
+      CLog::Log(LOGERROR, "CDVDPlayer::OpenInputStream - error opening file [%s]", filenames[i].c_str());
+      // if we can't open an input stream for the "master" file return false.
+      if (filenames[i].Equals(m_filename.c_str()))
+        return false;
+      continue;
+    }
+    m_pInputStreams.push_back(pInputStream);
   }
+  m_pInputStream = m_pInputStreams[0];
 
   // find any available external subtitles for non dvd files
   if (!m_pInputStream->IsStreamType(DVDSTREAM_TYPE_DVD)
@@ -611,7 +636,7 @@ bool CDVDPlayer::OpenInputStream()
   &&  !m_pInputStream->IsStreamType(DVDSTREAM_TYPE_HTSP))
   {
     // find any available external subtitles
-    std::vector<CStdString> filenames;
+    filenames.clear();
     CUtil::ScanForExternalSubtitles( m_filename, filenames );
 
     // find any upnp subtitles
@@ -932,7 +957,7 @@ bool CDVDPlayer::IsBetterStream(CCurrentStream& current, CDemuxStream* stream)
 
 void CDVDPlayer::Process()
 {
-  if (!OpenInputStream())
+  if (!OpenInputStreams())
   {
     m_bAbortRequest = true;
     return;
@@ -1056,7 +1081,7 @@ void CDVDPlayer::Process()
     // should we open a new input stream?
     if(!m_pInputStream)
     {
-      if (OpenInputStream() == false)
+      if (OpenInputStreams() == false)
       {
         m_bAbortRequest = true;
         break;
@@ -1981,12 +2006,12 @@ void CDVDPlayer::OnExit()
     }
     m_pSubtitleDemuxer = NULL;
 
-    // destroy the inputstream
-    if (m_pInputStream)
-    {
-      CLog::Log(LOGNOTICE, "CDVDPlayer::OnExit() deleting input stream");
-      delete m_pInputStream;
-    }
+    // destroy the inputstreams
+    CLog::Log(LOGNOTICE, "CDVDPlayer::OnExit() deleting external input stream");
+    for(unsigned int i = 0; i < m_pInputStreams.size(); i++)
+      SAFE_DELETE(m_pInputStreams[i]);
+
+    m_pInputStreams.clear();
     m_pInputStream = NULL;
 
     // clean up all selection streams
@@ -1998,6 +2023,7 @@ void CDVDPlayer::OnExit()
   catch (...)
   {
     CLog::Log(LOGERROR, "%s - Exception thrown when trying to close down player, memory leak will follow", __FUNCTION__);
+    m_pInputStreams.clear();
     m_pInputStream = NULL;
     m_pDemuxer = NULL;
   }
