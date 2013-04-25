@@ -419,6 +419,8 @@ CDVDPlayer::CDVDPlayer(IPlayerCallback& callback)
   m_pSubtitleDemuxer = NULL;
   m_pInputStream = NULL;
 
+  m_extInputStreams.clear();
+
   m_dvd.Clear();
   m_State.Clear();
   m_EdlAutoSkipMarkers.Clear();
@@ -559,6 +561,51 @@ void CDVDPlayer::OnStartup()
 
   g_dvdPerformanceCounter.EnableMainPerformance(this);
   CUtil::ClearTempFonts();
+}
+
+bool CDVDPlayer::OpenExternalAudioInputStreams()
+{
+  if (!m_pInputStream)
+    return false;
+
+  for(unsigned int i = 0; i < m_extInputStreams.size(); i++)
+      SAFE_DELETE(m_extInputStreams[i]);
+  m_extInputStreams.clear();
+  
+  // find any available external audio track
+  if (!m_pInputStream->IsStreamType(DVDSTREAM_TYPE_DVD)
+    &&  !m_pInputStream->IsStreamType(DVDSTREAM_TYPE_TV)
+    &&  !m_pInputStream->IsStreamType(DVDSTREAM_TYPE_HTSP))
+  {
+    std::vector<CStdString> filenames;
+    CUtil::ScanForExternalAudio( m_filename, filenames );
+
+    if (!filenames.empty())
+      CLog::Log(LOGNOTICE, "Creating InputStreams for external audio files");
+
+    for(unsigned int i=0;i<filenames.size();i++)
+    {
+      CDVDInputStream* ext_pInputStream = NULL;
+      CFileItem ext_item = CFileItem(filenames[i]);
+      CStdString ext_mimeType = ext_item.GetMimeType();
+      ext_pInputStream = CDVDFactoryInputStream::CreateInputStream(this, filenames[i], ext_mimeType);
+      if(ext_pInputStream == NULL)
+      {
+        CLog::Log(LOGERROR, "CDVDPlayer::OpenInputStream - unable to create input stream for external audio file [%s]", filenames[i].c_str());
+        continue;
+      }
+      else
+        ext_pInputStream->SetFileItem(ext_item);
+
+      if (!ext_pInputStream->Open(filenames[i].c_str(), ext_mimeType))
+      {
+        CLog::Log(LOGERROR, "CDVDPlayer::OpenInputStream - error opening  external audio file [%s]", filenames[i].c_str());
+        continue;
+      }
+      m_extInputStreams.push_back(ext_pInputStream);
+    }
+  }
+  return m_extInputStreams.size() > 0;
 }
 
 bool CDVDPlayer::OpenInputStream()
@@ -938,6 +985,7 @@ void CDVDPlayer::Process()
     return;
   }
 
+  OpenExternalAudioInputStreams();
   if (CDVDInputStream::IMenus* ptr = dynamic_cast<CDVDInputStream::IMenus*>(m_pInputStream))
   {
     CLog::Log(LOGNOTICE, "DVDPlayer: playing a file with menu's");
@@ -1061,6 +1109,7 @@ void CDVDPlayer::Process()
         m_bAbortRequest = true;
         break;
       }
+      OpenExternalAudioInputStreams();
     }
 
     // should we open a new demuxer?
@@ -1989,6 +2038,11 @@ void CDVDPlayer::OnExit()
     }
     m_pInputStream = NULL;
 
+    for(unsigned int i = 0; i < m_extInputStreams.size(); i++)
+      SAFE_DELETE(m_extInputStreams[i]);
+
+    m_extInputStreams.clear();
+
     // clean up all selection streams
     m_SelectionStreams.Clear(STREAM_NONE, STREAM_SOURCE_NONE);
 
@@ -2000,6 +2054,7 @@ void CDVDPlayer::OnExit()
     CLog::Log(LOGERROR, "%s - Exception thrown when trying to close down player, memory leak will follow", __FUNCTION__);
     m_pInputStream = NULL;
     m_pDemuxer = NULL;
+    m_extInputStreams.clear();
   }
 
   m_bStop = true;
