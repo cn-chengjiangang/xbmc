@@ -65,7 +65,8 @@ bool CWinSystemWin32::InitWindowSystem()
 
 bool CWinSystemWin32::DestroyWindowSystem()
 {
-  RestoreDesktopResolution(m_nScreen);
+  if (m_bWindowCreated || !m_MonitorsInfo.empty())
+    RestoreDesktopResolution(m_nScreen);
   return true;
 }
 

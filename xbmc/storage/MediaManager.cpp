@@ -81,7 +81,8 @@ CMediaManager::CMediaManager()
 
 void CMediaManager::Stop()
 {
-  m_platformStorage->Stop();
+  if (m_platformStorage)
+    m_platformStorage->Stop();
 
   delete m_platformStorage;
   m_platformStorage = NULL;

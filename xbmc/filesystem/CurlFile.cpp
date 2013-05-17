@@ -887,6 +887,12 @@ void CCurlFile::Reset()
 
 bool CCurlFile::Open(const CURL& url)
 {
+  if (!g_curlInterface.IsLoaded())
+  {
+    CLog::Log(LOGDEBUG, "CurlFile::Open(%p) %s", (void*)this, m_url.c_str());
+    return false;
+  }
+
   m_opened = true;
   m_seekable = true;
 
