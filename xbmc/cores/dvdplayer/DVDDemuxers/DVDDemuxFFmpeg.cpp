@@ -212,6 +212,7 @@ CDVDDemuxFFmpeg::CDVDDemuxFFmpeg() : CDVDDemux()
   m_ioContext = NULL;
   m_iCurrentPts = DVD_NOPTS_VALUE;
   m_bMatroska = false;
+  m_bGif = false;
   m_bAVI = false;
   m_speed = DVD_PLAYSPEED_NORMAL;
   m_program = UINT_MAX;
@@ -446,8 +447,9 @@ bool CDVDDemuxFFmpeg::Open(CDVDInputStream* pInput)
   if (iformat && (strcmp(iformat->name, "mjpeg") == 0) && m_ioContext->seekable == 0)
     m_pFormatContext->max_analyze_duration = 500000;
 
-  // we need to know if this is matroska or avi later
+  // we need to know if this is matroska, avi or gif later
   m_bMatroska = strncmp(m_pFormatContext->iformat->name, "matroska", 8) == 0;	// for "matroska.webm"
+  m_bGif = strcmp(m_pFormatContext->iformat->name, "gif") == 0;
   m_bAVI = strcmp(m_pFormatContext->iformat->name, "avi") == 0;
 
   if (streaminfo)
@@ -1093,8 +1095,8 @@ CDemuxStream* CDVDDemuxFFmpeg::AddStream(int iId)
         if (m_bAVI && pStream->codec->codec_id == CODEC_ID_H264)
           st->bPTSInvalid = true;
 
-        //average fps is more accurate for mkv files
-        if (m_bMatroska && pStream->avg_frame_rate.den && pStream->avg_frame_rate.num)
+        //average fps is more accurate for mkv files and gifs
+        if ((m_bMatroska && pStream->avg_frame_rate.den && pStream->avg_frame_rate.num) || m_bGif)
         {
           st->iFpsRate = pStream->avg_frame_rate.num;
           st->iFpsScale = pStream->avg_frame_rate.den;
