@@ -104,6 +104,11 @@ int main(int argc, char **argv)
     /* then add a name for the tempfile */
     if ( (strlen(FoutTmpName) + strlen(DEFAULT_TMP_NAME))  > STRLEN-1 ) GIF_EXIT("Filename too long.");
     strcat(FoutTmpName, DEFAULT_TMP_NAME);
+
+#ifdef _WIN32
+    mktemp(FoutTmpName);
+	Fout = fopen(FoutTmpName, "w" );
+#else
     int FD;
     FD = mkstemp(FoutTmpName); /* returns filedescriptor */
     if (FD == -1 )
@@ -111,6 +116,8 @@ int main(int argc, char **argv)
 	GIF_EXIT("Failed to open output.");
     }
     Fout = fdopen(FD, "w"); /* returns a stream with FD */
+#endif
+
     if (Fout == NULL )
     {
 	GIF_EXIT("Failed to open output.");
