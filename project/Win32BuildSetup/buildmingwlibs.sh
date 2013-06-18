@@ -115,6 +115,13 @@ setfilepath /xbmc/system/players/paplayer
 checkfiles xbmc_asap.dll
 echo "##### building of asap dlls done #####"
 
+echo "##### building giflib dlls #####"
+cd /xbmc/lib/libgif/
+runBackgroundProcess "./build_xbmc_win32.sh $MAKECLEAN"
+setfilepath /xbmc/system/
+checkfiles libgif.dll
+echo "##### building of giflib dlls done #####"
+
 # wait for key press
 if [ $NOPROMPT == 0 ]; then
   echo press a key to close the window
