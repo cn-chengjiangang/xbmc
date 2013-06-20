@@ -545,7 +545,7 @@ void CGUIWindowSlideShow::Process(unsigned int currentTime, CDirtyRegionList &re
     }
   }
 
-  if (m_slides->Get(m_iCurrentSlide)->IsVideo() && bSlideShow)
+  if (bSlideShow && (m_slides->Get(m_iCurrentSlide)->IsVideo() || m_slides->Get(m_iCurrentSlide)->IsAnimatedGif()))
   {
     if (!PlayVideo())
       return;
@@ -1096,7 +1096,7 @@ void CGUIWindowSlideShow::Move(float fX, float fY)
 bool CGUIWindowSlideShow::PlayVideo()
 {
   CFileItemPtr item = m_slides->Get(m_iCurrentSlide);
-  if (!item || !item->IsVideo())
+  if (!item || (!item->IsVideo() && !item->IsAnimatedGif()))
     return false;
   CLog::Log(LOGDEBUG, "Playing current video slide %s", item->GetPath().c_str());
   m_bPlayingVideo = true;

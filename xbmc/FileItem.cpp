@@ -59,6 +59,7 @@
 #ifdef HAS_ASAP_CODEC
 #include "cores/paplayer/ASAPCodec.h"
 #endif
+#include "pictures/Gif.h"
 
 using namespace std;
 using namespace XFILE;
@@ -797,6 +798,18 @@ bool CFileItem::IsVideo() const
 
   return URIUtils::HasExtension(m_strPath, g_advancedSettings.m_videoExtensions);
 }
+
+bool CFileItem::IsAnimatedGif() const
+{
+  if (URIUtils::HasExtension(m_strPath, ".gif"))
+  {
+    Gif gif;
+    if (gif.LoadGif(m_strPath.c_str()))
+      return (gif.m_numFrames * gif.m_delay >= 100);
+  }
+  return false;
+}
+
 
 bool CFileItem::IsEPG() const
 {
