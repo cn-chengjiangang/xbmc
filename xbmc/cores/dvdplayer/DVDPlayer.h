@@ -321,12 +321,13 @@ protected:
   void SendPlayerMessage(CDVDMsg* pMsg, unsigned int target);
 
   bool ReadPacket(DemuxPacket*& packet, CDemuxStream*& stream);
+  bool ReadExternalAudioPacket(DemuxPacket*& packet, CDemuxStream*& stream);
   bool IsValidStream(CCurrentStream& stream);
   bool IsBetterStream(CCurrentStream& current, CDemuxStream* stream);
   bool CheckDelayedChannelEntry(void);
 
   bool OpenInputStreams();
-  bool OpenDemuxStream();
+  bool OpenDemuxStreams();
   void OpenDefaultStreams(bool reset = true);
 
   void UpdateApplication(double timeout);
@@ -369,12 +370,17 @@ protected:
   CDVDClock m_clock;                // master clock
   CDVDOverlayContainer m_overlayContainer;
 
-  CDVDDemux* m_pDemuxer;            // demuxer for current playing file
+  CDVDDemux* m_pDemuxer;                          // master demuxer for current playing file
+  std::vector<CDVDDemux*> m_pDemuxers;            // demuxers for current playing file
   CDVDInputStream* m_pInputStream;                // master input stream for current playing file
   std::vector<CDVDInputStream*> m_pInputStreams;  // input streams for current playing file
   CDVDDemux* m_pSubtitleDemuxer;
 
   CStdString m_lastSub;
+
+  bool m_extAudio;
+  int m_extAudioOffset;
+  int m_extAudioId;
 
   struct SDVDInfo
   {
