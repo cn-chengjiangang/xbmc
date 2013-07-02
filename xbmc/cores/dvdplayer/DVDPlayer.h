@@ -42,6 +42,7 @@
 
 
 class CDVDInputStream;
+typedef boost::shared_ptr<CDVDInputStream> InputStreamPtr;
 
 class CDVDDemux;
 class CDemuxStreamVideo;
@@ -326,7 +327,7 @@ protected:
   bool IsBetterStream(CCurrentStream& current, CDemuxStream* stream);
   bool CheckDelayedChannelEntry(void);
 
-  bool OpenInputStreams();
+  bool OpenInputStream();
   bool OpenDemuxStreams();
   void OpenDefaultStreams(bool reset = true);
 
@@ -372,8 +373,8 @@ protected:
 
   CDVDDemux* m_pDemuxer;                          // master demuxer for current playing file
   std::vector<CDVDDemux*> m_pDemuxers;            // demuxers for current playing file
-  CDVDInputStream* m_pInputStream;                // master input stream for current playing file
-  std::vector<CDVDInputStream*> m_pInputStreams;  // input streams for current playing file
+  CDVDInputStream* m_pInputStream;                  // master input stream for current playing file
+  std::map<int, InputStreamPtr> m_pInputStreams;  // input streams for current playing file
   CDVDDemux* m_pSubtitleDemuxer;
 
   CStdString m_lastSub;
