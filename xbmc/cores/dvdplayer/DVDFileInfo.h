@@ -23,6 +23,7 @@
 
 class CFileItem;
 class CDVDDemux;
+typedef boost::shared_ptr<CDVDDemux> DemuxPtr;
 class CStreamDetails;
 class CDVDInputStream;
 class CTextureDetails;
@@ -36,7 +37,7 @@ public:
   // Probe the files streams and store the info in the VideoInfoTag
   static bool GetFileStreamDetails(CFileItem *pItem);
   static bool DemuxerToStreamDetails(CDVDInputStream* pInputStream, CDVDDemux *pDemux, CStreamDetails &details, const CStdString &path = "");
-  static bool DemuxerToStreamDetails(CDVDInputStream* pInputStream, CDVDDemux *pDemux, std::vector<CDVDDemux*> m_extDemuxer, CStreamDetails &details, const CStdString &path = "");
+  static bool DemuxerToStreamDetails(CDVDInputStream* pInputStream, CDVDDemux *pDemux, std::map<int, DemuxPtr> m_extDemuxer, CStreamDetails &details, const CStdString &path = "");
   static bool DemuxerToStreamDetails(CDVDInputStream* pInputStream, CDVDDemux *pDemux, CStreamDetails &details, bool handleExternalAudio, const CStdString &path = "");
   static bool GetFileDuration(const CStdString &path, int &duration);
   static bool AddExternalAudioToDetails(const CStdString &path, CStreamDetails &details);

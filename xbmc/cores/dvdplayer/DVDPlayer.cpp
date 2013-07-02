@@ -679,9 +679,6 @@ bool CDVDPlayer::OpenInputStream()
 
 bool CDVDPlayer::OpenDemuxStreams()
 {
-  for(unsigned int i = 0; i < m_pDemuxers.size(); i++)
-    SAFE_DELETE(m_pDemuxers[i]);
-
   m_pDemuxer = NULL;
   m_pDemuxers.clear();
   CLog::Log(LOGNOTICE, "Creating Demuxer");
@@ -748,12 +745,13 @@ bool CDVDPlayer::OpenDemuxStreams()
       if(len > 0 && tim > 0)
         input->SetReadRate(len * 1000 / tim);
 
-      m_pDemuxers.push_back(demuxer);
+      DemuxPtr ptr(demuxer);
+      m_pDemuxers[iter->first] = ptr;
       m_SelectionStreams.Update(input, demuxer);
     }
     ++iter;
   }
-  m_pDemuxer = m_pDemuxers[0];
+  m_pDemuxer = m_pDemuxers[0].get();
 
   return m_pDemuxers.size() > 0; 
 }
@@ -884,6 +882,9 @@ bool CDVDPlayer::ReadPacket(DemuxPacket*& packet, CDemuxStream*& stream)
       return true;
     }
   }
+
+  if(m_extAudio && m_dvdPlayerAudio.GetLevel() < 50)
+    return ReadExternalAudioPacket(packet, stream);
 
   StreamType st;
   CDemuxStream* s;
@@ -1232,10 +1233,7 @@ void CDVDPlayer::Process()
     DemuxPacket* pPacket = NULL;
     CDemuxStream *pStream = NULL;
 
-    if(m_extAudio && m_dvdPlayerAudio.GetLevel() < 50)
-      ReadExternalAudioPacket(pPacket, pStream);
-    else
-      ReadPacket(pPacket, pStream);
+    ReadPacket(pPacket, pStream);
 
     if (pPacket && !pStream)
     {
@@ -1274,8 +1272,6 @@ void CDVDPlayer::Process()
       CDVDInputStream::ENextStream next = m_pInputStream->NextStream();
       if(next == CDVDInputStream::NEXTSTREAM_OPEN)
       {
-        for(unsigned int i = 0; i < m_pDemuxers.size(); i++)
-            SAFE_DELETE(m_pDemuxers[i]);
         m_pDemuxers.clear();
 
         m_pDemuxer = NULL;
@@ -2091,8 +2087,6 @@ void CDVDPlayer::OnExit()
     }
     // destroy the demuxers
     CLog::Log(LOGNOTICE, "CDVDPlayer::OnExit() deleting demuxers");
-    for (unsigned int i = 0; i < m_pDemuxers.size(); i++)
-      SAFE_DELETE(m_pDemuxers[i]);
 
     m_pDemuxers.clear();
     m_pDemuxer = NULL;

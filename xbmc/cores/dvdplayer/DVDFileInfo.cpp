@@ -329,7 +329,7 @@ bool CDVDFileInfo::GetFileStreamDetails(CFileItem *pItem)
   }
 }
 
-bool CDVDFileInfo::DemuxerToStreamDetails(CDVDInputStream *pInputStream, CDVDDemux *pDemux, std::vector<CDVDDemux*> m_extDemuxer, CStreamDetails &details, const CStdString &path)
+bool CDVDFileInfo::DemuxerToStreamDetails(CDVDInputStream *pInputStream, CDVDDemux *pDemux, std::map<int, DemuxPtr> m_extDemuxer, CStreamDetails &details, const CStdString &path)
 {
   bool retVal = false;
   details.Reset();
