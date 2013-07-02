@@ -159,7 +159,7 @@ public:
   int              Source  (StreamSource source, std::string filename);
 
   void             Update  (SelectionStream& s);
-  void             Update  (CDVDInputStream* input, CDVDDemux* demuxer);
+  int              Update  (CDVDInputStream* input, CDVDDemux* demuxer);
 };
 
 
@@ -330,7 +330,8 @@ protected:
   bool CheckDelayedChannelEntry(void);
 
   bool OpenInputStream();
-  bool OpenDemuxStreams();
+  bool OpenDemuxStream();
+  bool OpenDemuxStream(CDVDInputStream* input);
   void OpenDefaultStreams(bool reset = true);
 
   void UpdateApplication(double timeout);
@@ -380,10 +381,6 @@ protected:
   CDVDDemux* m_pSubtitleDemuxer;
 
   CStdString m_lastSub;
-
-  bool m_extAudio;
-  int m_extAudioOffset;
-  int m_extAudioId;
 
   struct SDVDInfo
   {
