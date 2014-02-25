@@ -21,7 +21,7 @@
  *
  */
 
-#include "lib\libgif\lib\gif_lib.h"
+#include "giflib/gif_lib.h"
 #include "DynamicDll.h"
 
 class DllLibGifInterface
@@ -30,17 +30,20 @@ public:
     virtual ~DllLibGifInterface() {}
     virtual GifFileType* DGifOpenFileName(const char *GifFileName, int *Error)=0;
     virtual int DGifCloseFile(GifFileType* GifFile)=0;    
-    virtual int DGifSlurp(GifFileType* GifFile)=0; 
+    virtual int DGifSlurp(GifFileType* GifFile)=0;
+    virtual int DGifSavedExtensionToGCB(GifFileType *GifFile, int ImageIndex, GraphicsControlBlock *GCB)=0;
 };
 
 class DllLibGif : public DllDynamic, DllLibGifInterface
 {
   DECLARE_DLL_WRAPPER(DllLibGif, DLL_PATH_LIBGIF)
-  DEFINE_METHOD2(GifFileType *, DGifOpenFileName, (const char *p1, int *p2))
+  DEFINE_METHOD1(char*, GifErrorString, (int p1))
+  DEFINE_METHOD2(GifFileType*, DGifOpenFileName, (const char *p1, int *p2))
   DEFINE_METHOD1(int, DGifCloseFile, (GifFileType* p1))
   DEFINE_METHOD1(int, DGifSlurp, (GifFileType* p1))
   DEFINE_METHOD3(int, DGifSavedExtensionToGCB, (GifFileType *p1, int p2, GraphicsControlBlock *p3))
   BEGIN_METHOD_RESOLVE()
+    RESOLVE_METHOD(GifErrorString)
     RESOLVE_METHOD(DGifOpenFileName)
     RESOLVE_METHOD(DGifCloseFile)
     RESOLVE_METHOD(DGifSlurp)

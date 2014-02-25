@@ -22,9 +22,40 @@
 
 #include "DllLibGif.h"
 #include "guilib/iimage.h"
+#include "guilib/Texture.h"
+
+class GifFrame 
+{
+  friend class Gif;
+public: 
+
+  GifFrame();
+  virtual ~GifFrame();
+  void Release();
+
+  GifFrame(const GifFrame& src);
+
+  unsigned char*  m_pImage;
+  unsigned int    m_delay;
+
+private:
+
+  unsigned int    m_imageSize;
+  unsigned int    m_ColorTableSize;
+  unsigned int    m_height;
+  unsigned int    m_width;
+  unsigned int    m_top;
+  unsigned int    m_left;
+  COLOR* m_pPalette;
+  unsigned int m_disposal;
+  int m_transparent;
+};
+
+
 
 class Gif : public IImage
 {
+  friend class GifFrame;
 public:
   Gif();
   virtual ~Gif();
@@ -37,11 +68,29 @@ public:
 
   virtual bool LoadGif(const char* file);
 
-  unsigned int m_numFrames;
-  unsigned int m_delay;
+  bool ExtractFrames();
+  bool SetFrameAreaToBack(unsigned char* dest, const GifFrame &frame);
+  bool ConstructFrame(GifFrame &frame, const unsigned char* src);
+  void Release();
+
+  std::vector<GifFrame> m_frames;
+  unsigned int    m_width;
+  unsigned int    m_height;
+  unsigned int    m_imageSize;
+  unsigned int    m_pitch;
+  unsigned int    m_loops;
 
 private:
-  DllLibGif m_dll;
-  std::string m_strMimeType;
-  BYTE* m_thumbnailbuffer;
+  DllLibGif       m_dll;
+  std::string     m_strMimeType;
+  BYTE*           m_thumbnailbuffer;
+  unsigned int    m_numFrames;
+  GifFileType*    m_gif;
+  bool            m_hasBackground;
+  COLOR           m_backColor;
+  COLOR*          m_pGlobalPalette;
+  unsigned int    m_gloabalPaletteSize;
+  unsigned char*  m_pTemplate;
+
+  void ConvertColorTable(COLOR* dest, ColorMapObject* src, unsigned int size);
 };
