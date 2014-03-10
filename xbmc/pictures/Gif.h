@@ -59,6 +59,7 @@ public:
   Gif();
   virtual ~Gif();
 
+  bool LoadGifMetaData(const char* file);
   bool LoadGif(const char* file);
 
   std::vector<GifFrame> m_frames;
@@ -67,10 +68,11 @@ public:
   unsigned int    m_imageSize;
   unsigned int    m_pitch;
   unsigned int    m_loops;
+  unsigned int    m_numFrames;
 
 private:
   DllLibGif       m_dll;
-  unsigned int    m_numFrames;
+  std::string     m_filename;
   GifFileType*    m_gif;
   bool            m_hasBackground;
   COLOR           m_backColor;
@@ -78,6 +80,7 @@ private:
   unsigned int    m_gloabalPaletteSize;
   unsigned char*  m_pTemplate;
 
+  bool LoadGifMetaData(GifFileType* file);
   static void ConvertColorTable(COLOR* dest, ColorMapObject* src, unsigned int size);  
   bool ExtractFrames(unsigned int count);
   void SetFrameAreaToBack(unsigned char* dest, const GifFrame &frame);

@@ -31,6 +31,7 @@ Gif::Gif() :
   m_pitch(0),
   m_loops(0),
   m_numFrames(0),
+  m_filename(""),
   m_gif(NULL),
   m_hasBackground(false),
   m_pGlobalPalette(NULL),
@@ -83,31 +84,18 @@ void Gif::ConvertColorTable(COLOR* dest, ColorMapObject* src, unsigned int size)
   }
 }
 
-
-bool Gif::LoadGif(const char* file)
+bool Gif::LoadGifMetaData(GifFileType* file)
 {
   if (!m_dll.IsLoaded())
     return false;
-
-  int err = 0;
-  m_gif = m_dll.DGifOpenFileName(file, &err);
-  if (!m_gif)
-  {
-    char* error = m_dll.GifErrorString(err);
-    if (error)
-      CLog::Log(LOGERROR, "Gif::LoadGif(): Could not open file %s - %s", file, error);
-    else
-      CLog::Log(LOGERROR, "Gif::LoadGif(): Could not open file %s (reasons unknown)", file);
-    return false;
-  }
 
   if (!m_dll.DGifSlurp(m_gif))
   {
     char* error = m_dll.GifErrorString(m_gif->Error);
     if (error)
-      CLog::Log(LOGERROR, "Gif::LoadGif(): Could not read file %s - %s", file, error);
+      CLog::Log(LOGERROR, "Gif::LoadGif(): Could not read file %s - %s", m_filename.c_str(), error);
     else
-      CLog::Log(LOGERROR, "Gif::LoadGif(): Could not read file %s (reasons unknown)", file);
+      CLog::Log(LOGERROR, "Gif::LoadGif(): Could not read file %s (reasons unknown)", m_filename.c_str());
     return false;
   }
 
@@ -115,7 +103,7 @@ bool Gif::LoadGif(const char* file)
   m_width  = m_gif->SWidth;
   if (!m_height || !m_width)
   {
-    CLog::Log(LOGERROR, "Gif::LoadGif(): Zero sized image. File %s", file);
+    CLog::Log(LOGERROR, "Gif::LoadGif(): Zero sized image. File %s", m_filename.c_str());
     return false;
   }
 
@@ -136,7 +124,7 @@ bool Gif::LoadGif(const char* file)
   }
   else
   {
-    CLog::Log(LOGERROR, "Gif::LoadGif(): No images found in file %s", file);
+    CLog::Log(LOGERROR, "Gif::LoadGif(): No images found in file %s", m_filename.c_str());
     return false;
   }
 
@@ -147,8 +135,37 @@ bool Gif::LoadGif(const char* file)
   {
     // at least 1 image
     m_numFrames = std::max(1U, GIF_MAX_MEMORY / m_imageSize);
-    CLog::Log(LOGERROR, "Gif::LoadGif(): Memory consumption too high: %lu bytes. Restricting animation to %u. File %s", memoryUsage, m_numFrames, file);
+    CLog::Log(LOGERROR, "Gif::LoadGif(): Memory consumption too high: %lu bytes. Restricting animation to %u. File %s", memoryUsage, m_numFrames, m_filename.c_str());
   }
+
+  return true;
+}
+
+bool Gif::LoadGifMetaData(const char* file)
+{
+  if (!m_dll.IsLoaded())
+    return false;
+
+  m_filename = file;
+  int err = 0;
+  m_gif = m_dll.DGifOpenFileName(file, &err);
+  if (!m_gif)
+  {
+    char* error = m_dll.GifErrorString(err);
+    if (error)
+      CLog::Log(LOGERROR, "Gif::LoadGif(): Could not open file %s - %s", m_filename.c_str(), error);
+    else
+      CLog::Log(LOGERROR, "Gif::LoadGif(): Could not open file %s (reasons unknown)", m_filename.c_str());
+    return false;
+  }
+  return LoadGifMetaData(m_gif);  
+}
+
+bool Gif::LoadGif(const char* file)
+{
+  m_filename = file;
+  if (!LoadGifMetaData(file))
+    return false;
 
   try
   {
@@ -178,7 +195,7 @@ bool Gif::LoadGif(const char* file)
   }
   catch (std::bad_alloc& ba)
   {
-    CLog::Log(LOGERROR, "Gif::Load(): Out of memory while reading file %s - %s", file, ba.what());
+    CLog::Log(LOGERROR, "Gif::Load(): Out of memory while reading file %s - %s", m_filename.c_str(), ba.what());
     Release();
     return false;
   }
