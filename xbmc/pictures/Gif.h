@@ -80,6 +80,7 @@ private:
   unsigned int    m_gloabalPaletteSize;
   unsigned char*  m_pTemplate;
 
+  void InitTemplateAndColormap();
   bool LoadGifMetaData(GifFileType* file);
   static void ConvertColorTable(COLOR* dest, ColorMapObject* src, unsigned int size);  
   bool ExtractFrames(unsigned int count);

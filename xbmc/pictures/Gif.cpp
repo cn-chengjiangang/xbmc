@@ -169,27 +169,7 @@ bool Gif::LoadGif(const char* file)
 
   try
   {
-    m_pTemplate = new unsigned char[m_imageSize];
-    memset(m_pTemplate, 0, m_imageSize);
-
-    if (m_gif->SColorMap)
-    {
-      m_gloabalPaletteSize = m_gif->SColorMap->ColorCount;
-      m_pGlobalPalette = new COLOR[m_gloabalPaletteSize];
-      ConvertColorTable(m_pGlobalPalette, m_gif->SColorMap, m_gloabalPaletteSize);
-
-      // draw the canvas
-      m_backColor = m_pGlobalPalette[m_gif->SBackGroundColor];
-      m_hasBackground = true;
-
-      for (unsigned int i = 0; i < m_height * m_width; ++i)
-      {
-        unsigned char *dest = m_pTemplate + (i *sizeof(COLOR));
-        memcpy(dest, &m_backColor, sizeof(COLOR));
-      }
-    }
-    else
-      m_pGlobalPalette = NULL;
+    InitTemplateAndColormap(); 
 
     return ExtractFrames(m_numFrames);
   }
@@ -199,6 +179,31 @@ bool Gif::LoadGif(const char* file)
     Release();
     return false;
   }
+}
+
+void Gif::InitTemplateAndColormap()
+{
+  m_pTemplate = new unsigned char[m_imageSize];
+  memset(m_pTemplate, 0, m_imageSize);
+
+  if (m_gif->SColorMap)
+  {
+    m_gloabalPaletteSize = m_gif->SColorMap->ColorCount;
+    m_pGlobalPalette = new COLOR[m_gloabalPaletteSize];
+    ConvertColorTable(m_pGlobalPalette, m_gif->SColorMap, m_gloabalPaletteSize);
+
+    // draw the canvas
+    m_backColor = m_pGlobalPalette[m_gif->SBackGroundColor];
+    m_hasBackground = true;
+
+    for (unsigned int i = 0; i < m_height * m_width; ++i)
+    {
+      unsigned char *dest = m_pTemplate + (i *sizeof(COLOR));
+      memcpy(dest, &m_backColor, sizeof(COLOR));
+    }
+  }
+  else
+    m_pGlobalPalette = NULL;
 }
 
 bool Gif::ExtractFrames(unsigned int count)
