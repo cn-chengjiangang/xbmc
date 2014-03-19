@@ -50,7 +50,6 @@
 #if defined(HAS_GIFLIB)
 #include "pictures/Gif.h"
 #endif//HAS_GIFLIB
-#include "guilib/GuiTexture.h"
 
 using namespace XFILE;
 
@@ -558,12 +557,12 @@ void CGUIWindowSlideShow::Process(unsigned int currentTime, CDirtyRegionList &re
       return;
     bSlideShow = false;
   }
-  else if(m_slides->Get(m_iCurrentSlide)->IsAnimatedPicture())
-  {
-    if (!PlayAnimatedPicture(currentTime, regions))
-      return;
-    bSlideShow = false;
-  }
+  //else if(m_slides->Get(m_iCurrentSlide)->IsAnimatedPicture())
+  //{
+  //  if (!PlayAnimatedPicture(currentTime, regions))
+  //    return;
+  //  bSlideShow = false;
+  //}
   // render the current image
   if (m_Image[m_iCurrentPic].IsLoaded())
   {
@@ -1132,30 +1131,31 @@ bool CGUIWindowSlideShow::PlayVideo()
 
 bool CGUIWindowSlideShow::PlayAnimatedPicture(unsigned int currentTime, CDirtyRegionList &dirtyregions)
 {
-  CFileItemPtr item = m_slides->Get(m_iCurrentSlide);
-  if (!item->IsAnimatedPicture())
-    return false;
-  if (StringUtils::EndsWithNoCase(item->GetPath(), ".gif"))
-  {
-#if defined(HAS_GIFLIB)
-    Gif gif;
-    if(!gif.LoadGif(item->GetPath().c_str()))
-#endif//HAS_GIFLIB
-    {
-      CLog::Log(LOGERROR, "Unable to load file: %s", item->GetPath().c_str());
-      return false;
-    }
-#if defined(HAS_GIFLIB)
-    for (std::vector<GifFrame>::iterator frame = gif.m_frames.begin(); frame != gif.m_frames.end(); ++frame)
-    {
-      CTexture *glTexture = new CTexture();
-      if (glTexture)
-      {
-        glTexture->LoadFromMemory(gif.m_width, gif.m_height, gif.m_pitch, XB_FMT_A8R8G8B8, false, frame->m_pImage);
-      }
-    }
-#endif//HAS_GIFLIB
-  }
+  return false;
+//  CFileItemPtr item = m_slides->Get(m_iCurrentSlide);
+//  if (!item->IsAnimatedPicture())
+//    return false;
+//  if (StringUtils::EndsWithNoCase(item->GetPath(), ".gif"))
+//  {
+//#if defined(HAS_GIFLIB)
+//    Gif gif;
+//    if(!gif.LoadGif(item->GetPath().c_str()))
+//#endif//HAS_GIFLIB
+//    {
+//      CLog::Log(LOGERROR, "Unable to load file: %s", item->GetPath().c_str());
+//      return false;
+//    }
+//#if defined(HAS_GIFLIB)
+//    for (std::vector<GifFrame>::iterator frame = gif.m_frames.begin(); frame != gif.m_frames.end(); ++frame)
+//    {
+//      CTexture *glTexture = new CTexture();
+//      if (glTexture)
+//      {
+//        glTexture->LoadFromMemory(gif.m_width, gif.m_height, gif.m_pitch, XB_FMT_A8R8G8B8, false, frame->m_pImage);
+//      }
+//    }
+//#endif//HAS_GIFLIB
+//  }
 }
 
 CSlideShowPic::DISPLAY_EFFECT CGUIWindowSlideShow::GetDisplayEffect(int iSlideNumber) const
