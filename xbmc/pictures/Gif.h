@@ -21,7 +21,7 @@
  */
 
 #include "DllLibGif.h"
-#include "guilib/Texture.h"
+#include "guilib/GDIColor.h"
 
 class GifFrame 
 {
