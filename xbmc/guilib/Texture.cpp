@@ -26,6 +26,7 @@
 #include "filesystem/SpecialProtocol.h"
 #include "filesystem/File.h"
 #include "utils/FileUtils.h"
+#include "guilib/GDIColor.h"
 #if defined(TARGET_DARWIN_IOS)
 #include <ImageIO/ImageIO.h>
 #include "filesystem/File.h"

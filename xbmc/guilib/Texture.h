@@ -26,10 +26,7 @@
 #include "XBTF.h"
 #include "guilib/imagefactory.h"
 
-#pragma pack(1)
-struct COLOR {unsigned char b,g,r,x;};	// Windows GDI expects 4bytes per color
-#pragma pack()
-
+struct COLOR;
 class CTexture;
 class CGLTexture;
 class CPiTexture;
