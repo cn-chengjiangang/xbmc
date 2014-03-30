@@ -24,7 +24,7 @@
 #include "DllLibGif.h"
 #include "guilib/GDIColor.h"
 
-class GifFrame 
+class GifFrame : public AnimatedImageFrame
 {
   friend class Gif;
 public: 
@@ -35,15 +35,9 @@ public:
 
   GifFrame(const GifFrame& src);
 
-  unsigned char*  m_pImage;
-  unsigned int    m_delay;
-
 private:
 
-  unsigned int    m_imageSize;
   unsigned int    m_ColorTableSize;
-  unsigned int    m_height;
-  unsigned int    m_width;
   unsigned int    m_top;
   unsigned int    m_left;
   COLOR* m_pPalette;

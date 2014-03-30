@@ -156,7 +156,7 @@ bool Gif::LoadGifMetaData(GifFileType* file)
     m_numFrames = std::max(1U, GIF_MAX_MEMORY / m_imageSize);
     CLog::Log(LOGERROR, "Gif::LoadGif(): Memory consumption too high: %lu bytes. Restricting animation to %u. File %s", memoryUsage, m_numFrames, m_filename.c_str());
   }
-
+  m_isAnimated = m_numFrames > 1;
   return true;
 }
 
@@ -467,12 +467,7 @@ bool Gif::CreateThumbnailFromSurface(unsigned char* bufferin, unsigned int width
 }
 
 GifFrame::GifFrame() :
-  m_pImage(NULL),
-  m_delay(0),
-  m_imageSize(0),
   m_ColorTableSize(0),
-  m_height(0),
-  m_width(0),
   m_top(0),
   m_left(0),
   m_pPalette(NULL),
@@ -482,24 +477,14 @@ GifFrame::GifFrame() :
 
 
 GifFrame::GifFrame(const GifFrame& src) :
-  m_pImage(NULL),
-  m_delay(src.m_delay),
-  m_imageSize(src.m_imageSize),
+  AnimatedImageFrame(src),
   m_ColorTableSize(src.m_ColorTableSize),
-  m_height(src.m_height),
-  m_width(src.m_width),
   m_top(src.m_top),
   m_left(src.m_left),
   m_pPalette(NULL),
   m_disposal(src.m_disposal),
   m_transparent(src.m_transparent)
 {
-  if (src.m_pImage)
-  {
-    m_pImage = new unsigned char[m_imageSize];
-    memcpy(m_pImage, src.m_pImage, m_imageSize);
-  }
-
   if (src.m_pPalette)
   {
     m_pPalette = new COLOR[m_ColorTableSize];

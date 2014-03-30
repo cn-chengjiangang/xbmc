@@ -23,11 +23,29 @@ class AnimatedImageFrame
 {
 public:
 
-  AnimatedImageFrame():m_width(0), m_height(0), m_pImage(NULL), m_delay(0) {};
+  AnimatedImageFrame() : m_width(0), m_height(0), m_pImage(NULL), m_delay(0), m_imageSize(0) {};
+
+  AnimatedImageFrame(const AnimatedImageFrame& src) :
+    m_height(src.m_height),
+    m_width(src.m_width),
+    m_pImage(NULL),
+    m_delay(src.m_delay),
+    m_imageSize(src.m_imageSize)
+  {
+    if (src.m_pImage)
+    {
+      m_pImage = new unsigned char[m_imageSize];
+      memcpy(m_pImage, src.m_pImage, m_imageSize);
+    }
+  }
+
   virtual ~AnimatedImageFrame() {};
 
   unsigned int    m_width;
   unsigned int    m_height;
   unsigned char*  m_pImage;
   unsigned int    m_delay;
+
+protected:
+  unsigned int    m_imageSize;
 };
