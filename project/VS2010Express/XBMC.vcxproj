@@ -1018,6 +1018,7 @@
       <Message Condition="'$(Configuration)|$(Platform)'=='Release (DirectX)|Win32'">Retrieving the git revision</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release (OpenGL)|Win32'">Retrieving the git revision</Message>
     </CustomBuild>
+    <ClInclude Include="..\..\xbmc\guilib\AnimatedImageFrame.h" />
     <ClInclude Include="..\..\xbmc\guilib\cximage.h" />
     <ClInclude Include="..\..\xbmc\guilib\GDIColor.h" />
     <ClInclude Include="..\..\xbmc\guilib\GUIKeyboard.h" />

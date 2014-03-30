@@ -19,12 +19,13 @@
  *
  */
 #include "utils/StdString.h"
+#include "AnimatedImageFrame.h"
 
 class IImage
 {
 public:
 
-  IImage():m_width(0), m_height(0), m_originalWidth(0), m_originalHeight(0), m_orientation(0), m_hasAlpha(false) {};
+  IImage():m_width(0), m_height(0), m_originalWidth(0), m_originalHeight(0), m_orientation(0), m_hasAlpha(false), m_isAnimated(false) {};
   virtual ~IImage() {};
 
   /*!
@@ -70,6 +71,9 @@ public:
   unsigned int originalHeight() const     { return m_originalHeight; }
   unsigned int Orientation() const        { return m_orientation; }
   bool hasAlpha() const                   { return m_hasAlpha; }
+  bool isAnimated() const                            { return m_isAnimated; }
+  std::vector<AnimatedImageFrame> Frames() const     { return m_frames; }
+
 
 protected:
 
@@ -79,5 +83,7 @@ protected:
   unsigned int m_originalHeight;  ///< original image height before scaling or cropping
   unsigned int m_orientation;
   bool m_hasAlpha;
+  bool m_isAnimated;
+  std::vector<AnimatedImageFrame> m_frames;
  
 };
