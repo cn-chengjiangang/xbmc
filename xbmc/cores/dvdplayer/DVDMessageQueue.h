@@ -20,6 +20,7 @@
  *
  */
 
+#include <algorithm>
 #include "DVDMessage.h"
 #include <string>
 #include <list>
