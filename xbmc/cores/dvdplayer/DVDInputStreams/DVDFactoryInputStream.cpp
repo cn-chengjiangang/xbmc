@@ -37,6 +37,7 @@
 #ifdef ENABLE_DVDINPUTSTREAM_STACK
 #include "DVDInputStreamStack.h"
 #endif
+#include "DVDInputStreamMultiFiles.h"
 #include "FileItem.h"
 #include "storage/MediaManager.h"
 #include "URL.h"
@@ -123,4 +124,9 @@ CDVDInputStream* CDVDFactoryInputStream::CreateInputStream(IDVDPlayer* pPlayer, 
 
   // our file interface handles all these types of streams
   return (new CDVDInputStreamFile());
+}
+
+CDVDInputStream* CDVDFactoryInputStream::CreateInputStream(IDVDPlayer* pPlayer, const std::vector<std::string>& filenames)
+{
+  return (new CDVDInputStreamMultiFiles(pPlayer, filenames));
 }

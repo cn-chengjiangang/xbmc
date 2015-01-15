@@ -730,8 +730,16 @@ bool CDVDPlayer::OpenInputStream()
   {
     m_filename = g_mediaManager.TranslateDevicePath("");
   }
-
-  m_pInputStream = CDVDFactoryInputStream::CreateInputStream(this, m_filename, m_mimetype);
+  // find any available external audio tracks
+  std::vector<std::string> filenames;
+  filenames.push_back(m_filename);
+  CUtil::ScanForExternalAudio(m_filename, filenames);
+  if (filenames.size() >= 2)
+  {
+    m_pInputStream = CDVDFactoryInputStream::CreateInputStream(this, filenames);
+  }
+  else
+    m_pInputStream = CDVDFactoryInputStream::CreateInputStream(this, m_filename, m_mimetype);
   if(m_pInputStream == NULL)
   {
     CLog::Log(LOGERROR, "CDVDPlayer::OpenInputStream - unable to create input stream for [%s]", m_filename.c_str());
@@ -746,6 +754,7 @@ bool CDVDPlayer::OpenInputStream()
     return false;
   }
 
+  filenames.clear();
   // find any available external subtitles for non dvd files
   if (!m_pInputStream->IsStreamType(DVDSTREAM_TYPE_DVD)
   &&  !m_pInputStream->IsStreamType(DVDSTREAM_TYPE_PVRMANAGER)
