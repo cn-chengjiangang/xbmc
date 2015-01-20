@@ -43,10 +43,23 @@
 #include "URL.h"
 #include "filesystem/File.h"
 #include "utils/URIUtils.h"
+#include "Util.h"
 
 
-CDVDInputStream* CDVDFactoryInputStream::CreateInputStream(IDVDPlayer* pPlayer, const std::string& file, const std::string& content)
+CDVDInputStream* CDVDFactoryInputStream::CreateInputStream(IDVDPlayer* pPlayer, const std::string& file, const std::string& content, bool scanforextaudio)
 {
+  if (scanforextaudio)
+  {
+    // find any available external audio tracks
+    std::vector<std::string> filenames;
+    filenames.push_back(file);
+    CUtil::ScanForExternalAudio(file, filenames);
+    if (filenames.size() >= 2)
+    {
+      return CreateInputStream(pPlayer, filenames);
+    }
+  }
+
   CFileItem item(file.c_str(), false);
 
   if(item.IsDiscImage())
