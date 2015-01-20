@@ -22,13 +22,15 @@
 #include "DVDFactoryDemuxer.h"
 #include "DVDInputStreams/DVDInputStream.h"
 #include "utils/log.h"
+#include "DVDClock.h"
 #include <map>
 
 
 
 CDVDDemuxMultiFiles::CDVDDemuxMultiFiles()
 {
-;
+  m_lastAudioDts = DVD_NOPTS_VALUE;
+  m_lastVideoDts = DVD_NOPTS_VALUE;
 }
 
 CDVDDemuxMultiFiles::~CDVDDemuxMultiFiles()
@@ -154,8 +156,39 @@ DemuxPacket* CDVDDemuxMultiFiles::Read()
 {
   if (!m_pDemuxer)
     return NULL;
+  
+  DemuxPacket* packet = NULL;
 
-  return m_pDemuxer->Read();
+
+  if (m_lastVideoDts <= m_lastAudioDts
+    || m_StreamMap.find(m_activeVideoStream)->second.first == m_StreamMap.find(m_activeAudioStream)->second.first)
+  {
+    packet = m_pDemuxer->Read();
+    if (packet)
+    {
+      CDemuxStream* stream = m_pDemuxer->GetStream(packet->iStreamId);
+      if ( stream && stream->type == STREAM_VIDEO)
+        packet->iStreamId = m_activeVideoStream;
+      else if (stream && stream->type == STREAM_AUDIO)
+        packet->iStreamId = m_activeAudioStream;
+      else
+        return NULL;
+      m_lastVideoDts = packet->dts;
+    }
+  }
+  else
+  {
+    packet = m_pDemuxers[m_StreamMap.find(m_activeAudioStream)->second.first]->Read();
+    if (packet)
+    {
+      packet->iStreamId = m_activeAudioStream;
+      m_lastAudioDts = packet->dts;
+    }
+  }
+
+  if (!packet)
+    return NULL;
+  return packet;
 }
 
 bool CDVDDemuxMultiFiles::SeekTime(int time, bool backwords, double* startpts)
@@ -173,3 +206,25 @@ bool CDVDDemuxMultiFiles::SeekTime(int time, bool backwords, double* startpts)
   }
   return true;
 }
+
+void CDVDDemuxMultiFiles::UpdateActiveSteams(const StreamType type, unsigned int index)
+{
+  switch (type)
+  {
+  case STREAM_AUDIO:
+    m_activeAudioStream = index;
+    break;
+  case STREAM_VIDEO:
+    m_activeVideoStream = index;
+    break;
+  case STREAM_SUBTITLE:
+
+    break;
+  case STREAM_TELETEXT:
+
+    break;
+  default:
+    break;
+  }
+}
+

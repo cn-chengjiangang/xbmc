@@ -43,6 +43,8 @@ public:
   int GetNrOfStreams();
   virtual std::string GetFileName() {return "";};
 
+  void CDVDDemuxMultiFiles::UpdateActiveSteams(StreamType type, unsigned int index);
+
 protected:
   void Dispose();
   bool UpdateStreamMap(int inputIndex, DemuxPtr demuxer);
@@ -52,6 +54,8 @@ protected:
   CDVDInputStreamMultiFiles* m_pInput;
   CDVDDemux* m_pDemuxer;                            // master demuxer for current playing file
   std::map<int, DemuxPtr> m_pDemuxers;              // demuxers for current playing file
-  double m_curPts;
-
+  unsigned int m_activeAudioStream;
+  unsigned int m_activeVideoStream;
+  double m_lastAudioDts;
+  double m_lastVideoDts;
 };

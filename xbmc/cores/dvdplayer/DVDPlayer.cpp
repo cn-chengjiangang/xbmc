@@ -33,6 +33,7 @@
 #include "DVDDemuxers/DVDDemuxVobsub.h"
 #include "DVDDemuxers/DVDFactoryDemuxer.h"
 #include "DVDDemuxers/DVDDemuxFFmpeg.h"
+#include "DVDDemuxers/DVDDemuxMultiFiles.h"
 #include "DVDCodecs/DVDCodecs.h"
 #include "DVDCodecs/DVDFactoryCodec.h"
 
@@ -475,7 +476,10 @@ void CSelectionStreams::Update(CDVDInputStream* input, CDVDDemux* demuxer, std::
       SelectionStream s;
       s.source   = source;
       s.type     = stream->type;
-      s.id       = stream->iId;
+      if (input && input->IsStreamType(DVDSTREAM_TYPE_MULTIFILES))
+        s.id = i;
+      else
+        s.id       = stream->iId;
       s.language = g_LangCodeExpander.ConvertToISO6392T(stream->language);
       s.flags    = stream->flags;
       s.filename = demuxer->GetFileName();
@@ -3243,6 +3247,13 @@ bool CDVDPlayer::OpenStream(CCurrentStream& current, int iStream, int source, bo
     current.lastdts = DVD_NOPTS_VALUE;
     if(stream)
       current.changes = stream->changes;
+
+    if (m_pInputStream && m_pInputStream->IsStreamType(DVDSTREAM_TYPE_MULTIFILES))
+    {
+      CDVDDemuxMultiFiles* multidemuxer = dynamic_cast<CDVDDemuxMultiFiles*>(m_pDemuxer);
+      if (multidemuxer)
+        multidemuxer->UpdateActiveSteams(current.type, current.id);
+    }
 
     UpdateClockMaster();
   }
