@@ -29,8 +29,8 @@
 
 CDVDDemuxMultiFiles::CDVDDemuxMultiFiles()
 {
-  m_lastAudioDts = DVD_NOPTS_VALUE;
-  m_lastVideoDts = DVD_NOPTS_VALUE;
+  m_lastInternalTimestamp = DVD_NOPTS_VALUE;
+  m_lastExternalTimestamp = DVD_NOPTS_VALUE;
 }
 
 CDVDDemuxMultiFiles::~CDVDDemuxMultiFiles()
@@ -65,7 +65,10 @@ bool CDVDDemuxMultiFiles::UpdateStreamMap(int inputIndex, DemuxPtr demuxer)
 
   for (int i = 0; i < demuxer.get()->GetNrOfStreams(); ++i)
   {
-    m_StreamMap[firstFree] = std::make_pair(inputIndex, i);
+    CDemuxStream* stream = demuxer.get()->GetStream(i);
+    if (stream)
+      m_StreamMap[firstFree] = std::make_pair(inputIndex, stream->iId);
+    m_InternalToExternalStreamMap[std::make_pair(stream->iId, demuxer)] = firstFree;
     firstFree++;
   }
 
@@ -160,20 +163,21 @@ DemuxPacket* CDVDDemuxMultiFiles::Read()
   DemuxPacket* packet = NULL;
 
 
-  if (m_lastVideoDts <= m_lastAudioDts
+  if (m_lastInternalTimestamp <= m_lastExternalTimestamp
     || m_StreamMap.find(m_activeVideoStream)->second.first == m_StreamMap.find(m_activeAudioStream)->second.first)
   {
     packet = m_pDemuxer->Read();
     if (packet)
     {
       CDemuxStream* stream = m_pDemuxer->GetStream(packet->iStreamId);
-      if ( stream && stream->type == STREAM_VIDEO)
-        packet->iStreamId = m_activeVideoStream;
-      else if (stream && stream->type == STREAM_AUDIO)
-        packet->iStreamId = m_activeAudioStream;
-      else
-        return NULL;
-      m_lastVideoDts = packet->dts;
+      //if ( stream && stream->type == STREAM_VIDEO)
+        //packet->iStreamId = m_activeVideoStream;
+      //else if (stream && stream->type == STREAM_AUDIO)
+        //packet->iStreamId = m_activeAudioStream;
+      std::map<std::pair<int, DemuxPtr>, unsigned int>::iterator iter = m_InternalToExternalStreamMap.find(std::make_pair(packet->iStreamId, m_pDemuxers[0]));
+      if (iter != m_InternalToExternalStreamMap.end())
+        packet->iStreamId = iter->second;
+      m_lastInternalTimestamp = packet->dts != DVD_NOPTS_VALUE ? packet->dts : packet->pts;
     }
   }
   else
@@ -182,7 +186,7 @@ DemuxPacket* CDVDDemuxMultiFiles::Read()
     if (packet)
     {
       packet->iStreamId = m_activeAudioStream;
-      m_lastAudioDts = packet->dts;
+      m_lastExternalTimestamp = packet->dts != DVD_NOPTS_VALUE ? packet->dts : packet->pts;
     }
   }
 

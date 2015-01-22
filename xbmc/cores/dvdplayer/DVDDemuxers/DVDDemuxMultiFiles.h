@@ -51,11 +51,12 @@ protected:
   bool RebuildStreamMap();
 
   std::map<unsigned int, std::pair<unsigned int, unsigned int>> m_StreamMap;
+  std::map<std::pair<int, DemuxPtr>, unsigned int> m_InternalToExternalStreamMap;
   CDVDInputStreamMultiFiles* m_pInput;
   CDVDDemux* m_pDemuxer;                            // master demuxer for current playing file
   std::map<int, DemuxPtr> m_pDemuxers;              // demuxers for current playing file
   unsigned int m_activeAudioStream;
   unsigned int m_activeVideoStream;
-  double m_lastAudioDts;
-  double m_lastVideoDts;
+  double m_lastExternalTimestamp;
+  double m_lastInternalTimestamp;
 };
