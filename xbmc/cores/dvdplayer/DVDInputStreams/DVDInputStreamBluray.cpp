@@ -938,7 +938,7 @@ int64_t CDVDInputStreamBluray::GetChapterPos(int ch)
   if (ch == -1 || ch > GetChapterCount())
     ch = GetChapter();
 
-  return m_title->chapters[ch-1].start;
+  return m_title->chapters[ch - 1].start / 90000;
 }
 
 int64_t CDVDInputStreamBluray::Seek(int64_t offset, int whence)
